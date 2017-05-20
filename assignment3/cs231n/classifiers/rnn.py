@@ -137,7 +137,43 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
-        pass
+        
+        ### forward ### 
+        # (1)
+        affine_out, affine_cache = affine_forward(features ,W_proj, b_proj)
+        
+        # (2)
+        word_embed_out, word_embed_cache = word_embedding_forward(captions_in, W_embed)
+        
+        # (3)
+        if self.cell_type == 'rnn':
+            rnn_out, rnn_cache = rnn_forward(word_embed_out, affine_out, Wx, Wh, b)
+        else:
+            raise Exception('unknown model!')
+        
+        # (4)
+        temp_affine_out, temp_affine_cache = temporal_affine_forward(rnn_out, W_vocab, b_vocab)
+        
+        # (5)
+        loss, dtemp_affine_out = temporal_softmax_loss(temp_affine_out, captions_out, mask)
+        
+        
+        ### backward ### 
+        # (4)
+        drnn_out, grads['W_vocab'], grads['b_vocab']= temporal_affine_backward(dtemp_affine_out, temp_affine_cache)
+        
+        # (3)
+        if self.cell_type == 'rnn':
+            dword_embed_out, daffine_out, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(drnn_out, rnn_cache)
+        else:
+            raise Exception('unknown model!')
+        
+        # (2)
+        grads['W_embed'] = word_embedding_backward(dword_embed_out, word_embed_cache)
+        
+        # (1)
+        dfeatures, grads['W_proj'], grads['b_proj'] = affine_backward(daffine_out, affine_cache)
+        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
