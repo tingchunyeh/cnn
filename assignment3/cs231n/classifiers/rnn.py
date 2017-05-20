@@ -148,6 +148,8 @@ class CaptioningRNN(object):
         # (3)
         if self.cell_type == 'rnn':
             rnn_out, rnn_cache = rnn_forward(word_embed_out, affine_out, Wx, Wh, b)
+        elif self.cell_type == 'lstm':
+            rnn_out, rnn_cache = lstm_forward(word_embed_out, affine_out, Wx, Wh, b)
         else:
             raise Exception('unknown model!')
         
@@ -165,6 +167,8 @@ class CaptioningRNN(object):
         # (3)
         if self.cell_type == 'rnn':
             dword_embed_out, daffine_out, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(drnn_out, rnn_cache)
+        elif self.cell_type == 'lstm':
+            dword_embed_out, daffine_out, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(drnn_out, rnn_cache)
         else:
             raise Exception('unknown model!')
         
