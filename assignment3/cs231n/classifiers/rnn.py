@@ -239,7 +239,34 @@ class CaptioningRNN(object):
         # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
         # a loop.                                                                 #
         ###########################################################################
-        pass
+        N, D = features.shape
+        affine_out, _ = affine_forward(features ,W_proj, b_proj)
+        prev_word = [self._start for i in range(N)]
+        prev_h = affine_out
+        prev_c = np.zeros(prev_h.shape)
+        captions[:, 0] = self._start
+        for t in range(1, max_length):
+            # embed previous word
+            embeded_word = W_embed[prev_word]
+            
+            # RNN with previous hidden state and embeded current word
+            if self.cell_type == 'rnn':
+                next_h, _ = rnn_step_forward(embeded_word, prev_h, Wx, Wh, b)
+            elif self.cell_type == 'lstm':
+                next_h, next_c, _ = lstm_step_forward(embeded_word, prev_h, prev_c, Wx, Wh, b)
+                prev_c = next_c
+            else:
+                raise ExceptionError('unknown model')
+            prev_h = next_h
+                
+            # affine next hidden state to scores
+            scores, _ = affine_forward(next_h, W_vocab, b_vocab)
+            
+            # select word with highest score
+            captions[:, t] = np.argmax(scores, axis = 1)
+            prev_word = captions[:, t]
+        
+        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
