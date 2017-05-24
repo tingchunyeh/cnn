@@ -244,8 +244,8 @@ class CaptioningRNN(object):
         prev_word = [self._start for i in range(N)]
         prev_h = affine_out
         prev_c = np.zeros(prev_h.shape)
-        captions[:, 0] = self._start
-        for t in range(1, max_length):
+        #captions[:, 0] = self._start
+        for t in range(0, max_length):
             # embed previous word
             embeded_word = W_embed[prev_word]
             
